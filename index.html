@@ -1,497 +1,462 @@
-import React, { useState } from 'react';
-import { Calculator, Package, Ship, Truck, Warehouse } from 'lucide-react';
-
-export default function ImportCostCalculator() {
-  const [formData, setFormData] = useState({
-    productName: '',
-    supplierCostPerKg: '',
-    totalWeight: '',
-    packageSize: '',
-    currency: 'USD',
-    euroCost: '',
-    euroUsdRate: '',
-    origin: 'China',
-    shippingType: 'FCL-40',
-    oceanFreight: '',
-    clearance: '190',
-    otherOceanCosts: '',
-    htsCode: '',
-    baseDutyRate: '',
-    trumpTariffRate: '',
-    addCvdRate: '',
-    antiDumpingRate: '',
-    countervailingRate: '',
-    antiDumpingPerKg: '',
-    countervailingPerKg: '',
-    destinationWarehouse: 'New Jersey',
-    inlandTrucking: '',
-    bankCharges: '30',
-    warehouseReceiving: ''
-  });
-
-  const [results, setResults] = useState(null);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const calculateCosts = () => {
-    const calculationDate = new Date().toLocaleString('en-US');
-    const weight = parseFloat(formData.totalWeight) || 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT Products - Import Costing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
     
-    let supplierCostUSD = 0;
-    if (formData.currency === 'EUR') {
-      supplierCostUSD = (parseFloat(formData.euroCost) || 0) * (parseFloat(formData.euroUsdRate) || 0);
-    } else {
-      supplierCostUSD = parseFloat(formData.supplierCostPerKg) || 0;
-    }
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    const fobValue = supplierCostUSD * weight;
-    const oceanFreight = parseFloat(formData.oceanFreight) || 0;
-    const clearance = parseFloat(formData.clearance) || 0;
-    const otherOcean = parseFloat(formData.otherOceanCosts) || 0;
-    const insurance = (fobValue + oceanFreight) * 0.00164;
-    const mpf = fobValue * 0.004714;
-    
-    const baseDutyAmount = fobValue * ((parseFloat(formData.baseDutyRate) || 0) / 100);
-    const addCvdAmount = fobValue * ((parseFloat(formData.addCvdRate) || 0) / 100);
-    const trumpTariffAmount = fobValue * ((parseFloat(formData.trumpTariffRate) || 0) / 100);
-    const antiDumpingAmount = (fobValue * ((parseFloat(formData.antiDumpingRate) || 0) / 100)) + (weight * (parseFloat(formData.antiDumpingPerKg) || 0));
-    const countervailingAmount = (fobValue * ((parseFloat(formData.countervailingRate) || 0) / 100)) + (weight * (parseFloat(formData.countervailingPerKg) || 0));
-    const totalDuties = baseDutyAmount + addCvdAmount + trumpTariffAmount + antiDumpingAmount + countervailingAmount;
+    <script type="text/babel">
+        const { useState } = React;
+        
+        const Calculator = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2"/>
+                <line x1="8" y1="6" x2="16" y2="6"/>
+                <line x1="16" y1="14" x2="16" y2="18"/>
+                <path d="M16 10h.01"/>
+                <path d="M12 10h.01"/>
+                <path d="M8 10h.01"/>
+                <path d="M12 14h.01"/>
+                <path d="M8 14h.01"/>
+                <path d="M12 18h.01"/>
+                <path d="M8 18h.01"/>
+            </svg>
+        );
+        
+        const Package = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16.5 9.4 7.55 4.24"/>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+        );
+        
+        const Ship = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/>
+                <path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/>
+                <path d="M12 10v4"/>
+                <path d="M12 2v3"/>
+            </svg>
+        );
+        
+        const Truck = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                <path d="M15 18H9"/>
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                <circle cx="17" cy="18" r="2"/>
+                <circle cx="7" cy="18" r="2"/>
+            </svg>
+        );
+        
+        const Warehouse = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"/>
+                <path d="M6 18h12"/>
+                <path d="M6 14h12"/>
+                <rect width="12" height="12" x="6" y="10"/>
+            </svg>
+        );
 
-    const trucking = parseFloat(formData.inlandTrucking) || 0;
-    const bankCharges = parseFloat(formData.bankCharges) || 0;
-    const receiving = parseFloat(formData.warehouseReceiving) || 0;
-    const totalLandedCost = fobValue + oceanFreight + clearance + insurance + mpf + otherOcean + totalDuties + trucking + bankCharges + receiving;
+        function ImportCostCalculator() {
+            const [formData, setFormData] = useState({
+                productName: '',
+                supplierCostPerKg: '',
+                totalWeight: '',
+                packageSize: '',
+                currency: 'USD',
+                euroCost: '',
+                euroUsdRate: '',
+                origin: 'China',
+                shippingType: 'FCL-40',
+                oceanFreight: '',
+                clearance: '190',
+                otherOceanCosts: '',
+                htsCode: '',
+                baseDutyRate: '',
+                trumpTariffRate: '',
+                addCvdRate: '',
+                antiDumpingRate: '',
+                countervailingRate: '',
+                antiDumpingPerKg: '',
+                countervailingPerKg: '',
+                destinationWarehouse: 'New Jersey',
+                inlandTrucking: '',
+                bankCharges: '30',
+                warehouseReceiving: ''
+            });
 
-    const costPerKg = weight > 0 ? totalLandedCost / weight : 0;
-    const costPerLb = costPerKg * 0.453592;
-    const packageSize = parseFloat(formData.packageSize) || 0;
-    const costPerPackage = packageSize > 0 ? costPerKg * packageSize : 0;
-    const numPackages = (weight > 0 && packageSize > 0) ? weight / packageSize : 0;
+            const [results, setResults] = useState(null);
 
-    const suggestedPricing = [5, 10, 12, 15, 20, 30, 40].map(m => ({
-      margin: m,
-      pricePerKg: costPerKg / (1 - m / 100),
-      pricePerLb: (costPerKg / (1 - m / 100)) * 0.453592,
-      pricePerPackage: packageSize > 0 ? (costPerKg / (1 - m / 100)) * packageSize : 0
-    }));
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
 
-    setResults({
-      productName: formData.productName,
-      calculationDate,
-      fobValue,
-      oceanFreight,
-      clearance,
-      insurance,
-      mpf,
-      otherOcean,
-      baseDutyAmount,
-      addCvdAmount,
-      trumpTariffAmount,
-      antiDumpingAmount,
-      countervailingAmount,
-      totalDuties,
-      trucking,
-      bankCharges,
-      receiving,
-      totalLandedCost,
-      costPerKg,
-      costPerLb,
-      costPerPackage,
-      numPackages,
-      packageSize,
-      suggestedPricing
-    });
-  };
+            const calculateCosts = () => {
+                const calculationDate = new Date().toLocaleString('en-US');
+                const weight = parseFloat(formData.totalWeight) || 0;
+                
+                let supplierCostUSD = 0;
+                if (formData.currency === 'EUR') {
+                    supplierCostUSD = (parseFloat(formData.euroCost) || 0) * (parseFloat(formData.euroUsdRate) || 0);
+                } else {
+                    supplierCostUSD = parseFloat(formData.supplierCostPerKg) || 0;
+                }
+                
+                const fobValue = supplierCostUSD * weight;
+                const oceanFreight = parseFloat(formData.oceanFreight) || 0;
+                const clearance = parseFloat(formData.clearance) || 0;
+                const otherOcean = parseFloat(formData.otherOceanCosts) || 0;
+                const insurance = (fobValue + oceanFreight) * 0.00164;
+                const mpf = fobValue * 0.004714;
+                
+                const baseDutyAmount = fobValue * ((parseFloat(formData.baseDutyRate) || 0) / 100);
+                const addCvdAmount = fobValue * ((parseFloat(formData.addCvdRate) || 0) / 100);
+                const trumpTariffAmount = fobValue * ((parseFloat(formData.trumpTariffRate) || 0) / 100);
+                const antiDumpingAmount = (fobValue * ((parseFloat(formData.antiDumpingRate) || 0) / 100)) + (weight * (parseFloat(formData.antiDumpingPerKg) || 0));
+                const countervailingAmount = (fobValue * ((parseFloat(formData.countervailingRate) || 0) / 100)) + (weight * (parseFloat(formData.countervailingPerKg) || 0));
+                const totalDuties = baseDutyAmount + addCvdAmount + trumpTariffAmount + antiDumpingAmount + countervailingAmount;
 
-  const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-  const fmt3 = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
+                const trucking = parseFloat(formData.inlandTrucking) || 0;
+                const bankCharges = parseFloat(formData.bankCharges) || 0;
+                const receiving = parseFloat(formData.warehouseReceiving) || 0;
+                const totalLandedCost = fobValue + oceanFreight + clearance + insurance + mpf + otherOcean + totalDuties + trucking + bankCharges + receiving;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Calculator className="w-8 h-8 text-indigo-600" />
-              <h1 className="text-3xl font-bold text-gray-800">Import Costing and Suggested Pricing Calculator</h1>
-            </div>
-            <div className="flex flex-col items-end">
-              <div className="text-2xl font-black" style={{letterSpacing:'0.1em'}}>P.A.T.</div>
-              <div className="h-1 w-full bg-blue-600 mb-1"></div>
-              <div className="text-sm font-bold">PRODUCTS</div>
-            </div>
-          </div>
-          <p className="text-gray-600 mb-2">Calculate landed costs and suggested pricing for imported chemicals, plastics, and food ingredients</p>
-          <p className="text-sm text-red-600 mb-8">Note: All duties calculated on FOB value only (not CIF)</p>
+                const costPerKg = weight > 0 ? totalLandedCost / weight : 0;
+                const costPerLb = costPerKg * 0.453592;
+                const packageSize = parseFloat(formData.packageSize) || 0;
+                const costPerPackage = packageSize > 0 ? costPerKg * packageSize : 0;
+                const numPackages = (weight > 0 && packageSize > 0) ? weight / packageSize : 0;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2"><Package className="w-5 h-5"/>Product Information</h2>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Product Name / Description</label>
-                <input type="text" name="productName" value={formData.productName} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Citric Acid Anhydrous"/>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Currency</label>
-                <select name="currency" value={formData.currency} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR (Euro)</option>
-                </select>
-              </div>
+                const suggestedPricing = [5, 10, 12, 15, 20, 30, 40].map(m => ({
+                    margin: m,
+                    pricePerKg: costPerKg / (1 - m / 100),
+                    pricePerLb: (costPerKg / (1 - m / 100)) * 0.453592,
+                    pricePerPackage: packageSize > 0 ? (costPerKg / (1 - m / 100)) * packageSize : 0
+                }));
 
-              {formData.currency === 'USD' ? (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Supplier Cost per Kg (USD) - FOB</label>
-                  <input type="number" name="supplierCostPerKg" value={formData.supplierCostPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Supplier Cost per Kg (EUR) - FOB</label>
-                    <input type="number" name="euroCost" value={formData.euroCost} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">EUR/USD Exchange Rate</label>
-                    <input type="number" name="euroUsdRate" value={formData.euroUsdRate} onChange={handleChange} step="0.0001" className="w-full px-4 py-2 border rounded-lg" placeholder="1.0850"/>
-                  </div>
-                </>
-              )}
+                setResults({
+                    productName: formData.productName,
+                    calculationDate,
+                    fobValue,
+                    oceanFreight,
+                    clearance,
+                    insurance,
+                    mpf,
+                    otherOcean,
+                    baseDutyAmount,
+                    addCvdAmount,
+                    trumpTariffAmount,
+                    antiDumpingAmount,
+                    countervailingAmount,
+                    totalDuties,
+                    trucking,
+                    bankCharges,
+                    receiving,
+                    totalLandedCost,
+                    costPerKg,
+                    costPerLb,
+                    costPerPackage,
+                    numPackages,
+                    packageSize,
+                    suggestedPricing
+                });
+            };
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Weight (kg)</label>
-                <input type="number" name="totalWeight" value={formData.totalWeight} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
+            const fmt = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+            const fmt3 = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v);
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Package Size (kg)</label>
-                <input type="number" name="packageSize" value={formData.packageSize} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., 25"/>
-              </div>
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <Calculator />
+                                    <h1 className="text-3xl font-bold text-gray-800">Import Costing and Suggested Pricing Calculator</h1>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <div className="text-2xl font-black" style={{letterSpacing:'0.1em'}}>P.A.T.</div>
+                                    <div className="h-1 w-full bg-blue-600 mb-1"></div>
+                                    <div className="text-sm font-bold">PRODUCTS</div>
+                                </div>
+                            </div>
+                            <p className="text-gray-600 mb-2">Calculate landed costs and suggested pricing for imported chemicals, plastics, and food ingredients</p>
+                            <p className="text-sm text-red-600 mb-8">Note: All duties calculated on FOB value only (not CIF)</p>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Origin Country</label>
-                <select name="origin" value={formData.origin} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
-                  <optgroup label="Most Frequent">
-                    <option value="China">China</option>
-                    <option value="Germany">Germany</option>
-                    <option value="Italy">Italy</option>
-                  </optgroup>
-                  <optgroup label="Other Countries">
-                    <option value="Argentina">Argentina</option>
-                    <option value="Australia">Australia</option>
-                    <option value="Austria">Austria</option>
-                    <option value="Belgium">Belgium</option>
-                    <option value="Brazil">Brazil</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Chile">Chile</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Denmark">Denmark</option>
-                    <option value="France">France</option>
-                    <option value="India">India</option>
-                    <option value="Indonesia">Indonesia</option>
-                    <option value="Ireland">Ireland</option>
-                    <option value="Israel">Israel</option>
-                    <option value="Japan">Japan</option>
-                    <option value="Malaysia">Malaysia</option>
-                    <option value="Mexico">Mexico</option>
-                    <option value="Netherlands">Netherlands</option>
-                    <option value="Norway">Norway</option>
-                    <option value="Philippines">Philippines</option>
-                    <option value="Poland">Poland</option>
-                    <option value="Singapore">Singapore</option>
-                    <option value="South Africa">South Africa</option>
-                    <option value="South Korea">South Korea</option>
-                    <option value="Spain">Spain</option>
-                    <option value="Sweden">Sweden</option>
-                    <option value="Switzerland">Switzerland</option>
-                    <option value="Taiwan">Taiwan</option>
-                    <option value="Thailand">Thailand</option>
-                    <option value="Turkey">Turkey</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Vietnam">Vietnam</option>
-                    <option value="Other">Other</option>
-                  </optgroup>
-                </select>
-              </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2"><Package />Product Information</h2>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Product Name / Description</label>
+                                        <input type="text" name="productName" value={formData.productName} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., Citric Acid Anhydrous"/>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Currency</label>
+                                        <select name="currency" value={formData.currency} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR (Euro)</option>
+                                        </select>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Shipping Type</label>
-                <select name="shippingType" value={formData.shippingType} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
-                  <option value="FCL-40">FCL - 40ft Container</option>
-                  <option value="FCL-20">FCL - 20ft Container</option>
-                  <option value="LCL">LCL</option>
-                  <option value="Courier">Courier</option>
-                </select>
-              </div>
-            </div>
+                                    {formData.currency === 'USD' ? (
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Supplier Cost per Kg (USD) - FOB</label>
+                                            <input type="number" name="supplierCostPerKg" value={formData.supplierCostPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Supplier Cost per Kg (EUR) - FOB</label>
+                                                <input type="number" name="euroCost" value={formData.euroCost} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">EUR/USD Exchange Rate</label>
+                                                <input type="number" name="euroUsdRate" value={formData.euroUsdRate} onChange={handleChange} step="0.0001" className="w-full px-4 py-2 border rounded-lg" placeholder="1.0850"/>
+                                            </div>
+                                        </>
+                                    )}
 
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2"><Ship className="w-5 h-5"/>Ocean Freight & Costs</h2>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Total Weight (kg)</label>
+                                        <input type="number" name="totalWeight" value={formData.totalWeight} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Ocean Freight (USD)</label>
-                <input type="number" name="oceanFreight" value={formData.oceanFreight} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Package Size (kg)</label>
+                                        <input type="number" name="packageSize" value={formData.packageSize} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., 25"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Clearance (USD)</label>
-                <input type="number" name="clearance" value={formData.clearance} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg bg-gray-50" placeholder="190.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Origin Country</label>
+                                        <select name="origin" value={formData.origin} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
+                                            <optgroup label="Most Frequent">
+                                                <option value="China">China</option>
+                                                <option value="Germany">Germany</option>
+                                                <option value="Italy">Italy</option>
+                                            </optgroup>
+                                            <optgroup label="Other Countries">
+                                                <option value="Argentina">Argentina</option>
+                                                <option value="Australia">Australia</option>
+                                                <option value="Austria">Austria</option>
+                                                <option value="Belgium">Belgium</option>
+                                                <option value="Brazil">Brazil</option>
+                                                <option value="Canada">Canada</option>
+                                                <option value="Chile">Chile</option>
+                                                <option value="Colombia">Colombia</option>
+                                                <option value="Denmark">Denmark</option>
+                                                <option value="France">France</option>
+                                                <option value="India">India</option>
+                                                <option value="Indonesia">Indonesia</option>
+                                                <option value="Ireland">Ireland</option>
+                                                <option value="Israel">Israel</option>
+                                                <option value="Japan">Japan</option>
+                                                <option value="Malaysia">Malaysia</option>
+                                                <option value="Mexico">Mexico</option>
+                                                <option value="Netherlands">Netherlands</option>
+                                                <option value="Norway">Norway</option>
+                                                <option value="Philippines">Philippines</option>
+                                                <option value="Poland">Poland</option>
+                                                <option value="Singapore">Singapore</option>
+                                                <option value="South Africa">South Africa</option>
+                                                <option value="South Korea">South Korea</option>
+                                                <option value="Spain">Spain</option>
+                                                <option value="Sweden">Sweden</option>
+                                                <option value="Switzerland">Switzerland</option>
+                                                <option value="Taiwan">Taiwan</option>
+                                                <option value="Thailand">Thailand</option>
+                                                <option value="Turkey">Turkey</option>
+                                                <option value="United Kingdom">United Kingdom</option>
+                                                <option value="Vietnam">Vietnam</option>
+                                                <option value="Other">Other</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <label className="block text-sm font-medium text-blue-900 mb-1">Insurance (Auto @ 0.164%)</label>
-                <p className="text-xs text-blue-700">(FOB + Ocean Freight) × 0.164%</p>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Shipping Type</label>
+                                        <select name="shippingType" value={formData.shippingType} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
+                                            <option value="FCL-40">FCL - 40ft Container</option>
+                                            <option value="FCL-20">FCL - 20ft Container</option>
+                                            <option value="LCL">LCL</option>
+                                            <option value="Courier">Courier</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <label className="block text-sm font-medium text-blue-900 mb-1">MPF (Auto @ 0.4714%)</label>
-                <p className="text-xs text-blue-700">FOB × 0.4714%</p>
-              </div>
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2"><Ship />Ocean Freight & Costs</h2>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Other Ocean Costs (USD)</label>
-                <input type="number" name="otherOceanCosts" value={formData.otherOceanCosts} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
-            </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Ocean Freight (USD)</label>
+                                        <input type="number" name="oceanFreight" value={formData.oceanFreight} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
 
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Customs & Duties</h2>
-              <p className="text-xs text-red-600">All rates calculated on FOB value only</p>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Clearance (USD)</label>
+                                        <input type="number" name="clearance" value={formData.clearance} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg bg-gray-50" placeholder="190.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">HTS Code</label>
-                <input type="text" name="htsCode" value={formData.htsCode} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., 2917.35.00"/>
-              </div>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                        <label className="block text-sm font-medium text-blue-900 mb-1">Insurance (Auto @ 0.164%)</label>
+                                        <p className="text-xs text-blue-700">(FOB + Ocean Freight) × 0.164%</p>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Base Duty Rate (%)</label>
-                <input type="number" name="baseDutyRate" value={formData.baseDutyRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="6.5"/>
-              </div>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                        <label className="block text-sm font-medium text-blue-900 mb-1">MPF (Auto @ 0.4714%)</label>
+                                        <p className="text-xs text-blue-700">FOB × 0.4714%</p>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Trump Tariff Rate (%)</label>
-                <input type="number" name="trumpTariffRate" value={formData.trumpTariffRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="20.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Other Ocean Costs (USD)</label>
+                                        <input type="number" name="otherOceanCosts" value={formData.otherOceanCosts} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
+                                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">ADD/CVD Combined Rate (%)</label>
-                <input type="number" name="addCvdRate" value={formData.addCvdRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="145.17"/>
-              </div>
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-semibold">Customs & Duties</h2>
+                                    <p className="text-xs text-red-600">All rates calculated on FOB value only</p>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Additional Anti-Dumping Rate (%)</label>
-                <input type="number" name="antiDumpingRate" value={formData.antiDumpingRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">HTS Code</label>
+                                        <input type="text" name="htsCode" value={formData.htsCode} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg" placeholder="e.g., 2917.35.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">OR Anti-Dumping (USD per kg)</label>
-                <input type="number" name="antiDumpingPerKg" value={formData.antiDumpingPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.50"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Base Duty Rate (%)</label>
+                                        <input type="number" name="baseDutyRate" value={formData.baseDutyRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="6.5"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Additional Countervailing Rate (%)</label>
-                <input type="number" name="countervailingRate" value={formData.countervailingRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Trump Tariff Rate (%)</label>
+                                        <input type="number" name="trumpTariffRate" value={formData.trumpTariffRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="20.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">OR Countervailing (USD per kg)</label>
-                <input type="number" name="countervailingPerKg" value={formData.countervailingPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.30"/>
-              </div>
-            </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">ADD/CVD Combined Rate (%)</label>
+                                        <input type="number" name="addCvdRate" value={formData.addCvdRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="145.17"/>
+                                    </div>
 
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2"><Truck className="w-5 h-5"/>Inland & Other Costs</h2>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Additional Anti-Dumping Rate (%)</label>
+                                        <input type="number" name="antiDumpingRate" value={formData.antiDumpingRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Destination Warehouse</label>
-                <select name="destinationWarehouse" value={formData.destinationWarehouse} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
-                  <option value="New Jersey">New Jersey</option>
-                  <option value="Illinois">Illinois</option>
-                  <option value="Texas">Texas</option>
-                  <option value="New Hampshire">New Hampshire</option>
-                  <option value="Maine">Maine</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">OR Anti-Dumping (USD per kg)</label>
+                                        <input type="number" name="antiDumpingPerKg" value={formData.antiDumpingPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.50"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Inland Trucking (USD)</label>
-                <input type="number" name="inlandTrucking" value={formData.inlandTrucking} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Additional Countervailing Rate (%)</label>
+                                        <input type="number" name="countervailingRate" value={formData.countervailingRate} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Bank Charges (USD)</label>
-                <input type="number" name="bankCharges" value={formData.bankCharges} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg bg-gray-50" placeholder="30.00"/>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">OR Countervailing (USD per kg)</label>
+                                        <input type="number" name="countervailingPerKg" value={formData.countervailingPerKg} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.30"/>
+                                    </div>
+                                </div>
 
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Warehouse className="w-4 h-4"/>Warehouse Receiving</h3>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Warehouse Receiving Costs (USD)</label>
-                  <input type="number" name="warehouseReceiving" value={formData.warehouseReceiving} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
-                </div>
-              </div>
-            </div>
-          </div>
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2"><Truck />Inland & Other Costs</h2>
 
-          <button onClick={calculateCosts} className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2">
-            <Calculator className="w-5 h-5"/>Calculate Landed Cost
-          </button>
-        </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Destination Warehouse</label>
+                                        <select name="destinationWarehouse" value={formData.destinationWarehouse} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg">
+                                            <option value="New Jersey">New Jersey</option>
+                                            <option value="Illinois">Illinois</option>
+                                            <option value="Texas">Texas</option>
+                                            <option value="New Hampshire">New Hampshire</option>
+                                            <option value="Maine">Maine</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
 
-        {results && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="mb-6 pb-4 border-b">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold">Cost Breakdown</h2>
-                  {results.productName && <p className="text-lg text-gray-600 mt-1">Product: {results.productName}</p>}
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Calculated:</p>
-                  <p className="text-sm font-medium">{results.calculationDate}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b bg-yellow-50 px-2">
-                  <span className="font-medium">Material (FOB):</span>
-                  <span className="font-semibold">{fmt(results.fobValue)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>Ocean Freight:</span>
-                  <span className="font-semibold">{fmt(results.oceanFreight)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>Clearance:</span>
-                  <span className="font-semibold">{fmt(results.clearance)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b bg-blue-50 px-2">
-                  <span>Insurance (auto):</span>
-                  <span className="font-semibold">{fmt(results.insurance)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b bg-blue-50 px-2">
-                  <span>MPF (auto):</span>
-                  <span className="font-semibold">{fmt(results.mpf)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>Other Ocean:</span>
-                  <span className="font-semibold">{fmt(results.otherOcean)}</span>
-                </div>
-              </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Inland Trucking (USD)</label>
+                                        <input type="number" name="inlandTrucking" value={formData.inlandTrucking} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                    </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b">
-                  <span>Base Duty:</span>
-                  <span className="font-semibold">{fmt(results.baseDutyAmount)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>Trump Tariff:</span>
-                  <span className="font-semibold">{fmt(results.trumpTariffAmount)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span>ADD/CVD:</span>
-                  <span className="font-semibold">{fmt(results.addCvdAmount)}</span>
-                </div>
-                {results.antiDumpingAmount > 0 && (
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Anti-Dumping:</span>
-                    <span className="font-semibold">{fmt(results.antiDumpingAmount)}</span>
-                  </div>
-                )}
-                {results.countervailingAmount > 0 && (
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Countervailing:</span>
-                    <span className="font-semibold">{fmt(results.countervailingAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between py-2 border-b bg-red-50 px-2">
-                  <span className="font-medium">Total Duties:</span>
-                  <span className="font-semibold text-red-700">{fmt(results.totalDuties)}</span>
-                </div>
-              </div>
-            </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Bank Charges (USD)</label>
+                                        <input type="number" name="bankCharges" value={formData.bankCharges} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg bg-gray-50" placeholder="30.00"/>
+                                    </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="flex justify-between py-2 border-b">
-                <span>Trucking:</span>
-                <span className="font-semibold">{fmt(results.trucking)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span>Bank Charges:</span>
-                <span className="font-semibold">{fmt(results.bankCharges)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span>Warehouse:</span>
-                <span className="font-semibold">{fmt(results.receiving)}</span>
-              </div>
-            </div>
+                                    <div className="border-t pt-4">
+                                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Warehouse />Warehouse Receiving</h3>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Warehouse Receiving Costs (USD)</label>
+                                            <input type="number" name="warehouseReceiving" value={formData.warehouseReceiving} onChange={handleChange} step="0.01" className="w-full px-4 py-2 border rounded-lg" placeholder="0.00"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg p-6 text-white mb-8">
-              <div className="grid grid-cols-2 gap-6 mb-4">
-                <div>
-                  <p className="text-indigo-200 text-sm mb-1">Total Landed Cost</p>
-                  <p className="text-3xl font-bold">{fmt(results.totalLandedCost)}</p>
-                </div>
-                <div>
-                  <p className="text-indigo-200 text-sm mb-1">Cost per Kilogram</p>
-                  <p className="text-3xl font-bold">{fmt3(results.costPerKg)}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-indigo-200 text-sm mb-1">Cost per Pound</p>
-                  <p className="text-3xl font-bold">{fmt3(results.costPerLb)}</p>
-                </div>
-                {results.packageSize > 0 && (
-                  <div>
-                    <p className="text-indigo-200 text-sm mb-1">Cost per Package ({results.packageSize} kg)</p>
-                    <p className="text-3xl font-bold">{fmt(results.costPerPackage)}</p>
-                    <p className="text-indigo-200 text-xs mt-1">Total: {Math.round(results.numPackages)} packages</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-green-600 to-emerald-700 rounded-lg p-6 text-white">
-              <h3 className="text-2xl font-bold mb-4">Suggested Sales Pricing by Profit Margin</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {results.suggestedPricing.map((p) => (
-                  <div key={p.margin} className="bg-white bg-opacity-20 rounded-lg p-4">
-                    <div className="text-center mb-3">
-                      <div className="text-3xl font-bold">{p.margin}%</div>
-                      <div className="text-green-100 text-xs">Profit Margin</div>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between border-b border-green-300 border-opacity-30 pb-1">
-                        <span className="text-green-100">Per kg:</span>
-                        <span className="font-semibold">{fmt3(p.pricePerKg)}</span>
-                      </div>
-                      <div className="flex justify-between border-b border-green-300 border-opacity-30 pb-1">
-                        <span className="text-green-100">Per lb:</span>
-                        <span className="font-semibold">{fmt3(p.pricePerLb)}</span>
-                      </div>
-                      {results.packageSize > 0 && (
-                        <div className="flex justify-between pt-1">
-                          <span className="text-green-100">Per package:</span>
-                          <span className="font-semibold">{fmt(p.pricePerPackage)}</span>
+                            <button onClick={calculateCosts} className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2">
+                                <Calculator />Calculate Landed Cost
+                            </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+
+                        {results && (
+                            <div className="bg-white rounded-lg shadow-lg p-8">
+                                <div className="mb-6 pb-4 border-b">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h2 className="text-2xl font-bold">Cost Breakdown</h2>
+                                            {results.productName && <p className="text-lg text-gray-600 mt-1">Product: {results.productName}</p>}
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm text-gray-500">Calculated:</p>
+                                            <p className="text-sm font-medium">{results.calculationDate}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between py-2 border-b bg-yellow-50 px-2">
+                                            <span className="font-medium">Material (FOB):</span>
+                                            <span className="font-semibold">{fmt(results.fobValue)}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span>Ocean Freight:</span>
+                                            <span className="font-semibold">{fmt(results.oceanFreight)}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span>Clearance:</span>
+                                            <span className="font-semibold">{fmt(results.clearance)}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b bg-blue-50 px-2">
+                                            <span>Insurance (auto):</span>
+                                            <span className="font-semibold">{fmt(results.insurance)}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b bg-blue-50 px-2">
+                                            <span>MPF (auto):</span>
+                                            <span className="font-semibold">{fmt(results.mpf)}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span>Other Ocean:</span>
+                                            <span className="font-semibold">{fmt(results.otherOcean)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span>
